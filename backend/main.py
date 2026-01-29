@@ -41,7 +41,7 @@ async def ask_agent(query: Query):
         ]
         prompt = chat_pipe.tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
         
-        chat_outputs = chat_pipe(prompt, max_new_tokens=500, do_sample=True, temperature=0.7)
+        chat_outputs = chat_pipe(prompt, max_new_tokens=100, do_sample=True, temperature=0.7)
         # Extract only the assistant's new text
         full_text = chat_outputs[0]["generated_text"]
         answer_text = full_text.split("<|assistant|>")[-1].strip()
