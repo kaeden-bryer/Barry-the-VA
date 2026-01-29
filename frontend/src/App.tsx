@@ -112,7 +112,7 @@ function App() {
           />
         </div>
         <div className="hero-right">
-          <h1>Barry — Voice Actor Assistant</h1>
+          <h1>Barry the Voice Assistant</h1>
           <p className="subtitle">Ask Barry a short question and he'll speak the answer.</p>
         </div>
       </header>
