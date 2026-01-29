@@ -6,6 +6,7 @@ function App() {
   const [loading, setLoading] = useState(false)
   const [status, setStatus] = useState<string | null>(null)
   const [assistantText, setAssistantText] = useState<string | null>(null)
+  const [sprite, setSprite] = useState<'default' | 'thinking' | 'talking'>('default')
   const audioRef = useRef<HTMLAudioElement | null>(null)
 
   const apiUrl = 'http://127.0.0.1:8000/ask'
@@ -27,6 +28,8 @@ function App() {
     setStatus('Loading...')
 
     try {
+      // show thinking sprite while waiting for response
+      setSprite('thinking')
       const resp = await fetch(apiUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -55,6 +58,7 @@ function App() {
       const audio = new Audio(url)
       audioRef.current = audio
 
+      // switch to talking when audio starts playing
       audio.onended = () => {
         try {
           URL.revokeObjectURL(url)
@@ -62,54 +66,96 @@ function App() {
         audioRef.current = null
         setLoading(false)
         setStatus(null)
+        setSprite('default')
       }
 
-      await audio.play()
-      setStatus('Playing response')
+      // attempt to play; if successful set talking sprite
+      const p = audio.play()
+      if (p && typeof p.then === 'function') {
+        p.then(() => {
+          setSprite('talking')
+          setStatus('Playing response')
+        }).catch((e) => {
+          // Play failed (autoplay policy); keep sprite default and show error
+          console.warn('Audio play failed', e)
+          setStatus('Playing failed: ' + (e?.message ?? ''))
+          setSprite('default')
+          setLoading(false)
+        })
+      } else {
+        // synchronous play
+        setSprite('talking')
+        setStatus('Playing response')
+      }
     } catch (err: any) {
       console.error(err)
       setStatus(err?.message ?? 'Error')
       setLoading(false)
+      setSprite('default')
     }
   }
 
   return (
     <div className="app-root">
-      <h1>Ask the agent</h1>
+      <header className="hero">
+        <div className="hero-left">
+          <img
+            src={
+              sprite === 'default'
+                ? '/Barry-default.png'
+                : sprite === 'thinking'
+                ? '/Barry-thinking.png'
+                : '/Barry-talking.png'
+            }
+            alt={`Barry is ${sprite}`}
+            className={`barry-sprite ${sprite}`}
+          />
+        </div>
+        <div className="hero-right">
+          <h1>Barry — Voice Actor Assistant</h1>
+          <p className="subtitle">Ask Barry a short question and he'll speak the answer.</p>
+        </div>
+      </header>
 
-      <form onSubmit={handleSubmit} className="ask-form">
-        <label htmlFor="question">Your question</label>
-        <input
-          id="question"
-          type="text"
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          placeholder="Ask a short question..."
-          disabled={loading}
-        />
-
-        <div className="controls">
-          <button type="submit" disabled={loading}>
-            {loading ? 'Waiting...' : 'Ask'}
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setText('')
-            }}
+      <main className="panel">
+        <form onSubmit={handleSubmit} className="ask-form" aria-label="Ask Barry">
+          <label htmlFor="question">Your question</label>
+          <input
+            id="question"
+            type="text"
+            value={text}
+            onChange={(e) => setText(e.target.value)}
+            placeholder="Ask a short question..."
             disabled={loading}
-          >
-            Clear
-          </button>
-        </div>
-      </form>
+            aria-label="Question input"
+          />
 
-      {status && <p className="status">{status}</p>}
-      {assistantText && (
-        <div className="assistant-text">
-          <strong>Assistant:</strong> {assistantText}
-        </div>
-      )}
+          <div className="controls">
+            <button type="submit" disabled={loading} className="btn primary">
+              {loading ? 'Waiting...' : 'Ask Barry'}
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setText('')
+              }}
+              disabled={loading}
+              className="btn"
+            >
+              Clear
+            </button>
+          </div>
+        </form>
+
+        <section className="response">
+          {status && <p className="status">{status}</p>}
+          {assistantText && (
+            <div className="assistant-text">
+              <strong>Barry says:</strong> {assistantText}
+            </div>
+          )}
+        </section>
+      </main>
     </div>
   )
 }
