@@ -138,6 +138,7 @@ function App() {
               type="button"
               onClick={() => {
                 setText('')
+                setAssistantText(null)
               }}
               disabled={loading}
               className="btn"
