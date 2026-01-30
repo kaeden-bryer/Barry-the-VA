@@ -22,10 +22,10 @@ app.add_middleware(
 # 2. Load Models (These will download on the first run)
 # 'device=0' uses GPU if you have one, otherwise use 'device=-1' for CPU
 print("Loading LLM...")
-chat_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", device=-1)
+chat_pipe = pipeline("text-generation", model="TinyLlama/TinyLlama-1.1B-Chat-v1.0", device=0)
 
 print("Loading TTS...")
-tts_pipe = pipeline("text-to-speech", model="facebook/mms-tts-eng", device=-1)
+tts_pipe = pipeline("text-to-speech", model="facebook/mms-tts-eng", device=0)
 
 class Query(BaseModel):
     text: str
